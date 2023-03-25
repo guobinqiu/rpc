@@ -28,14 +28,14 @@ func Call(conn io.ReadWriteCloser, serviceName, methodName string, inArgs []any)
 }
 
 type Server struct {
-	services map[string]interface{}
+	services map[string]any
 }
 
 func NewServer() *Server {
-	return &Server{services: make(map[string]interface{})}
+	return &Server{services: make(map[string]any)}
 }
 
-func (s *Server) Register(srv interface{}, name string) {
+func (s *Server) Register(srv any, name string) {
 	s.services[name] = srv
 }
 

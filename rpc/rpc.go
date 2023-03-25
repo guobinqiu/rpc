@@ -9,11 +9,11 @@ import (
 type param struct {
 	ServiceName string
 	MethodName  string
-	InArgs      []interface{}
-	OutArgs     []interface{}
+	InArgs      []any
+	OutArgs     []any
 }
 
-func Call(conn io.ReadWriteCloser, serviceName, methodName string, inArgs []interface{}) *Out {
+func Call(conn io.ReadWriteCloser, serviceName, methodName string, inArgs []any) *Out {
 	encoder := json.NewEncoder(conn)
 	encoder.Encode(param{
 		ServiceName: serviceName,

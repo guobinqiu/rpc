@@ -6,10 +6,10 @@ import (
 )
 
 type Out struct {
-	OutArgs []interface{}
+	OutArgs []any
 }
 
-func (o *Out) deconstruct(t reflect.Type, v interface{}) reflect.Value {
+func (o *Out) deconstruct(t reflect.Type, v any) reflect.Value {
 	vv := reflect.New(t)
 	b, _ := json.Marshal(v)
 	json.Unmarshal(b, vv.Interface())
@@ -28,7 +28,7 @@ func (o *Out) Bool(index int) bool {
 	return v.Elem().Bool()
 }
 
-func (o *Out) Interface(index int, customType interface{}) interface{} {
+func (o *Out) Interface(index int, customType any) any {
 	t := reflect.TypeOf(customType)
 	v := o.deconstruct(t, o.OutArgs[index])
 	return v.Elem().Interface()

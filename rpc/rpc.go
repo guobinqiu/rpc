@@ -113,7 +113,7 @@ func (s *Server) match(p param, mtype reflect.Type) ([]reflect.Value, bool) {
 				tt = t.Elem()
 			}
 			v := reflect.New(tt)
-			if !s.mapToStruct(arg.(map[string]interface{}), reflect.Indirect(v)) {
+			if !s.mapToStruct(arg.(map[string]any), reflect.Indirect(v)) {
 				return nil, false
 			}
 			if t.Kind() == reflect.Struct {
@@ -127,7 +127,7 @@ func (s *Server) match(p param, mtype reflect.Type) ([]reflect.Value, bool) {
 	return inValues, true
 }
 
-func (s *Server) mapToStruct(arg map[string]interface{}, v reflect.Value) bool {
+func (s *Server) mapToStruct(arg map[string]any, v reflect.Value) bool {
 	for key, value := range arg {
 		structFieldValue := v.FieldByName(key)
 		if !structFieldValue.IsValid() {
@@ -136,7 +136,7 @@ func (s *Server) mapToStruct(arg map[string]interface{}, v reflect.Value) bool {
 		if reflect.ValueOf(value).Type().ConvertibleTo(structFieldValue.Type()) {
 			structFieldValue.Set(reflect.ValueOf(value).Convert(structFieldValue.Type()))
 		} else if structFieldValue.Kind() == reflect.Struct {
-			return s.mapToStruct(value.(map[string]interface{}), structFieldValue)
+			return s.mapToStruct(value.(map[string]any), structFieldValue)
 		} else {
 			return false
 		}

@@ -28,27 +28,27 @@ func main() {
 	var u user
 	var out *rpc.Out
 
-	// out, err = rpc.Call(conn, "UserService", "GetUserById", []interface{}{1})
-	// if err != nil {
-	// 	fmt.Println(err)
-	// } else {
-	// 	fmt.Println(out.ToInterface(0, u).(user))
-	// }
+	out, err = rpc.Call(conn, "UserService", "GetUserById", []interface{}{1})
+	if err != nil {
+		fmt.Println(err)
+	} else {
+		fmt.Println(out.ToInterface(0, u).(user))
+	}
 
-	// out, err = rpc.Call(conn, "UserService", "GetUserByName", []interface{}{"guobin"})
-	// if err != nil {
-	// 	fmt.Println(err)
-	// } else {
-	// 	fmt.Println(out.ToInterface(0, u).(user))
-	// }
+	out, err = rpc.Call(conn, "UserService", "GetUserByName", []interface{}{"guobin"})
+	if err != nil {
+		fmt.Println(err)
+	} else {
+		fmt.Println(out.ToInterface(0, u).(user))
+	}
 
-	// out, err = rpc.Call(conn, "UserService", "Add", []interface{}{1, 2})
-	// if err != nil {
-	// 	fmt.Println(err)
-	// } else {
-	// 	fmt.Println(out.ToInt(0))
-	// 	fmt.Println(out.ToBool(1))
-	// }
+	out, err = rpc.Call(conn, "UserService", "Add", []interface{}{1, 2})
+	if err != nil {
+		fmt.Println(err)
+	} else {
+		fmt.Println(out.ToInt(0))
+		fmt.Println(out.ToBool(1))
+	}
 
 	u = user{
 		Name: "Guobin",
@@ -58,7 +58,15 @@ func main() {
 			OfficeAddr: "bbbbb",
 		},
 	}
+
 	out, err = rpc.Call(conn, "UserService", "GrowUp", []interface{}{&u})
+	if err != nil {
+		fmt.Println(err)
+	} else {
+		fmt.Println(out.Values())
+	}
+
+	out, err = rpc.Call(conn, "UserService", "GrowUp2", []interface{}{u})
 	if err != nil {
 		fmt.Println(err)
 	} else {

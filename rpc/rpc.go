@@ -84,32 +84,8 @@ func (s *Server) HandleConn(conn io.ReadWriteCloser) {
 			continue
 		}
 
-		typeUnmatch := false
-
-		var inValues []reflect.Value
-
-		for i, arg := range p.InArgs {
-			if reflect.ValueOf(arg).Type().ConvertibleTo(mtype.In(i + 1)) {
-				inValues = append(inValues, reflect.ValueOf(arg).Convert(mtype.In(i+1)))
-			} else if reflect.ValueOf(arg).Type().Kind() == reflect.Map {
-				t := mtype.In(i + 1).Elem()
-				if t.Kind() == reflect.Ptr {
-					t = t.Elem()
-				}
-				v := reflect.New(t)
-				vv := reflect.Indirect(v)
-				if !canMapToStruct(arg.(map[string]interface{}), vv) {
-					typeUnmatch = true
-					break
-				}
-				inValues = append(inValues, v)
-			} else {
-				typeUnmatch = true
-				break
-			}
-		}
-
-		if typeUnmatch {
+		inValues, matched := s.match(p, mtype)
+		if !matched {
 			p.Error = "参数类型不匹配"
 			encoder.Encode(&p)
 			continue
@@ -124,17 +100,43 @@ func (s *Server) HandleConn(conn io.ReadWriteCloser) {
 	}
 }
 
-func canMapToStruct(arg map[string]interface{}, vv reflect.Value) bool {
-	for k, v := range arg {
-		structFieldValue := vv.FieldByName(k)
+func (s *Server) match(p param, mtype reflect.Type) ([]reflect.Value, bool) {
+	var inValues []reflect.Value
+
+	for i, arg := range p.InArgs {
+		t := mtype.In(i + 1)
+		if reflect.ValueOf(arg).Type().ConvertibleTo(t) {
+			inValues = append(inValues, reflect.ValueOf(arg).Convert(t))
+		} else if reflect.ValueOf(arg).Type().Kind() == reflect.Map {
+			tt := t
+			if t.Kind() == reflect.Ptr {
+				tt = t.Elem()
+			}
+			v := reflect.New(tt)
+			if !s.mapToStruct(arg.(map[string]interface{}), reflect.Indirect(v)) {
+				return nil, false
+			}
+			if t.Kind() == reflect.Struct {
+				v = v.Elem()
+			}
+			inValues = append(inValues, v)
+		} else {
+			return nil, false
+		}
+	}
+	return inValues, true
+}
+
+func (s *Server) mapToStruct(arg map[string]interface{}, v reflect.Value) bool {
+	for key, value := range arg {
+		structFieldValue := v.FieldByName(key)
 		if !structFieldValue.IsValid() {
 			return false
 		}
-		if reflect.ValueOf(v).Type().ConvertibleTo(structFieldValue.Type()) {
-			vvv := reflect.ValueOf(v).Convert(structFieldValue.Type())
-			structFieldValue.Set(vvv)
+		if reflect.ValueOf(value).Type().ConvertibleTo(structFieldValue.Type()) {
+			structFieldValue.Set(reflect.ValueOf(value).Convert(structFieldValue.Type()))
 		} else if structFieldValue.Kind() == reflect.Struct {
-			return canMapToStruct(v.(map[string]interface{}), structFieldValue)
+			return s.mapToStruct(value.(map[string]interface{}), structFieldValue)
 		} else {
 			return false
 		}

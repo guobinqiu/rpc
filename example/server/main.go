@@ -45,6 +45,11 @@ func (s *Userservice) GrowUp(u *user) *user {
 	return u
 }
 
+func (s *Userservice) GrowUp2(u user) user {
+	u.Age += 1
+	return u
+}
+
 func main() {
 	server := rpc.NewServer()
 	server.Register(new(Userservice), "UserService")

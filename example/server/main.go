@@ -7,14 +7,20 @@ import (
 )
 
 type user struct {
-	ID   int64
-	Name string
-	Age  int
+	ID      int64
+	Name    string
+	Age     int
+	Address address
+}
+
+type address struct {
+	HomeAddr   string
+	OfficeAddr string
 }
 
 type Userservice struct{}
 
-func (u *Userservice) GetUserById(id int64) *user {
+func (s *Userservice) GetUserById(id int64) *user {
 	return &user{
 		ID:   id,
 		Name: "Jack",
@@ -22,7 +28,7 @@ func (u *Userservice) GetUserById(id int64) *user {
 	}
 }
 
-func (u *Userservice) GetUserByName(name string) *user {
+func (s *Userservice) GetUserByName(name string) *user {
 	return &user{
 		ID:   2,
 		Name: name,
@@ -30,8 +36,13 @@ func (u *Userservice) GetUserByName(name string) *user {
 	}
 }
 
-func (u *Userservice) Add(a int, b int) (int, bool) {
+func (s *Userservice) Add(a int, b int) (int, bool) {
 	return a + b, true
+}
+
+func (s *Userservice) GrowUp(u *user) *user {
+	u.Age += 1
+	return u
 }
 
 func main() {

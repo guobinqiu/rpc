@@ -8,9 +8,15 @@ import (
 )
 
 type user struct {
-	ID   int64
-	Name string
-	Age  int
+	ID      int64
+	Name    string
+	Age     int
+	Address address
+}
+
+type address struct {
+	HomeAddr   string
+	OfficeAddr string
 }
 
 func main() {
@@ -22,12 +28,40 @@ func main() {
 	var u user
 	var out *rpc.Out
 
-	out = rpc.Call(conn, "UserService", "GetUserById", []interface{}{1})
-	fmt.Println(out.Interface(0, u).(user))
+	// out, err = rpc.Call(conn, "UserService", "GetUserById", []interface{}{1})
+	// if err != nil {
+	// 	fmt.Println(err)
+	// } else {
+	// 	fmt.Println(out.ToInterface(0, u).(user))
+	// }
 
-	out = rpc.Call(conn, "UserService", "GetUserByName", []interface{}{"guobin"})
-	fmt.Println(out)
+	// out, err = rpc.Call(conn, "UserService", "GetUserByName", []interface{}{"guobin"})
+	// if err != nil {
+	// 	fmt.Println(err)
+	// } else {
+	// 	fmt.Println(out.ToInterface(0, u).(user))
+	// }
 
-	out = rpc.Call(conn, "UserService", "Add", []interface{}{1, 2})
-	fmt.Println(out)
+	// out, err = rpc.Call(conn, "UserService", "Add", []interface{}{1, 2})
+	// if err != nil {
+	// 	fmt.Println(err)
+	// } else {
+	// 	fmt.Println(out.ToInt(0))
+	// 	fmt.Println(out.ToBool(1))
+	// }
+
+	u = user{
+		Name: "Guobin",
+		Age:  100,
+		Address: address{
+			HomeAddr:   "aaaaa",
+			OfficeAddr: "bbbbb",
+		},
+	}
+	out, err = rpc.Call(conn, "UserService", "GrowUp", []interface{}{&u})
+	if err != nil {
+		fmt.Println(err)
+	} else {
+		fmt.Println(out.Values())
+	}
 }

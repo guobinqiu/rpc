@@ -96,13 +96,13 @@ func (s *Server) HandleConn(conn io.ReadWriteCloser) {
 				if t.Kind() == reflect.Ptr {
 					t = t.Elem()
 				}
-				vv := reflect.New(t)
-				vvv := reflect.Indirect(vv)
-				if !canMapToStruct(arg.(map[string]interface{}), vvv) {
+				v := reflect.New(t)
+				vv := reflect.Indirect(v)
+				if !canMapToStruct(arg.(map[string]interface{}), vv) {
 					typeUnmatch = true
 					break
 				}
-				inValues = append(inValues, vv)
+				inValues = append(inValues, v)
 			} else {
 				typeUnmatch = true
 				break
@@ -135,6 +135,8 @@ func canMapToStruct(arg map[string]interface{}, vv reflect.Value) bool {
 			structFieldValue.Set(vvv)
 		} else if structFieldValue.Kind() == reflect.Struct {
 			return canMapToStruct(v.(map[string]interface{}), structFieldValue)
+		} else {
+			return false
 		}
 	}
 	return true

@@ -46,7 +46,10 @@ type Server struct {
 }
 
 func NewServer() *Server {
-	return &Server{services: make(map[string]any), mu: new(sync.Mutex)}
+	return &Server{
+		services: make(map[string]any),
+		mu:       new(sync.Mutex),
+	}
 }
 
 func (s *Server) Register(srv any, name string) {
@@ -56,13 +59,12 @@ func (s *Server) Register(srv any, name string) {
 }
 
 func (s *Server) HandleConn(conn io.ReadWriteCloser) {
-	var p param
-	decoder := json.NewDecoder(conn)
-	encoder := json.NewEncoder(conn)
-
 	for {
-		decoder.Decode(&p)
+		var p param
+		encoder := json.NewEncoder(conn)
+		decoder := json.NewDecoder(conn)
 
+		decoder.Decode(&p)
 		_, ok := s.services[p.ServiceName]
 		if !ok {
 			p.Error = "服务没找到"

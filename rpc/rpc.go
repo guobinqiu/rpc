@@ -59,12 +59,17 @@ func (s *Server) Register(srv any, name string) {
 }
 
 func (s *Server) HandleConn(conn io.ReadWriteCloser) {
-	for {
-		var p param
-		encoder := json.NewEncoder(conn)
-		decoder := json.NewDecoder(conn)
+	defer conn.Close()
 
-		decoder.Decode(&p)
+	var p param
+	decoder := json.NewDecoder(conn)
+	encoder := json.NewEncoder(conn)
+
+	for {
+		if err := decoder.Decode(&p); err == io.EOF {
+			break
+		}
+
 		_, ok := s.services[p.ServiceName]
 		if !ok {
 			p.Error = "服务没找到"

@@ -72,4 +72,6 @@ func main() {
 	} else {
 		fmt.Println(out.Values())
 	}
+
+	conn.Close()
 }

@@ -58,7 +58,7 @@ func (s *Server) Register(srv any, name string) {
 	s.services[name] = srv
 }
 
-func (s *Server) HandleConn(conn io.ReadWriteCloser) {
+func (s *Server) ServeConn(conn io.ReadWriteCloser) {
 	defer conn.Close()
 
 	var p param

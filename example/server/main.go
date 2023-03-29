@@ -54,9 +54,15 @@ func main() {
 	server := rpc.NewServer()
 	server.Register(new(Userservice), "UserService")
 
-	l, _ := net.Listen("tcp", ":3456")
+	l, err := net.Listen("tcp", ":3456")
+	if err != nil {
+		panic(err)
+	}
 	for {
-		conn, _ := l.Accept()
-		go server.HandleConn(conn)
+		conn, err := l.Accept()
+		if err != nil {
+			continue
+		}
+		go server.ServeConn(conn)
 	}
 }

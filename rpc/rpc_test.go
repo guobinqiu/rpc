@@ -22,8 +22,8 @@ type Userservice struct{}
 func (s *Userservice) GetUserById(id int64) *user {
 	return &user{
 		ID:   id,
-		Name: "Jack",
-		Age:  100,
+		Name: "Guobin",
+		Age:  40,
 	}
 }
 

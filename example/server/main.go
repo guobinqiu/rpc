@@ -8,7 +8,7 @@ import (
 
 type Userservice struct{}
 
-func (s *Userservice) Add(a int, b int) int {
+func (s *Userservice) Add(a, b int) int {
 	return a + b
 }
 

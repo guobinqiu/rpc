@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
+	"net"
 	"reflect"
 	"sync"
 )
@@ -16,12 +17,28 @@ type param struct {
 	Error       string
 }
 
-func Call(conn io.ReadWriteCloser, serviceName, methodName string, inArgs []any) (*Out, error) {
-	var p param
-	encoder := json.NewEncoder(conn)
-	decoder := json.NewDecoder(conn)
+type Client struct {
+	encoder *json.Encoder
+	decoder *json.Decoder
+	conn    net.Conn
+}
 
-	if err := encoder.Encode(param{
+func Dial(network, address string) (*Client, error) {
+	conn, err := net.Dial(network, address)
+	if err != nil {
+		return nil, err
+	}
+	return &Client{
+		encoder: json.NewEncoder(conn),
+		decoder: json.NewDecoder(conn),
+		conn:    conn,
+	}, nil
+}
+
+func (c *Client) Call(serviceName, methodName string, inArgs []any) (*Out, error) {
+	var p param
+
+	if err := c.encoder.Encode(param{
 		ServiceName: serviceName,
 		MethodName:  methodName,
 		InArgs:      inArgs,
@@ -29,7 +46,7 @@ func Call(conn io.ReadWriteCloser, serviceName, methodName string, inArgs []any)
 		return nil, err
 	}
 
-	if err := decoder.Decode(&p); err != nil {
+	if err := c.decoder.Decode(&p); err != nil {
 		return nil, err
 	}
 
@@ -38,6 +55,14 @@ func Call(conn io.ReadWriteCloser, serviceName, methodName string, inArgs []any)
 	}
 
 	return &Out{p.OutArgs}, nil
+}
+
+func (c *Client) Close() error {
+	return c.conn.Close()
+}
+
+func (c *Client) GetConn() net.Conn {
+	return c.conn
 }
 
 type Server struct {
@@ -58,7 +83,7 @@ func (s *Server) Register(srv any, name string) {
 	s.services[name] = srv
 }
 
-func (s *Server) ServeConn(conn io.ReadWriteCloser) {
+func (s *Server) ServeConn(conn net.Conn) {
 	defer conn.Close()
 
 	var p param

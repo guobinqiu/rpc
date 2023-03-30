@@ -8,8 +8,8 @@ import (
 
 type Userservice struct{}
 
-func (s *Userservice) Add(a int, b int) (int, bool) {
-	return a + b, true
+func (s *Userservice) Add(a int, b int) int {
+	return a + b
 }
 
 func main() {

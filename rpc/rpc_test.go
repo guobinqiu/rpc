@@ -44,10 +44,10 @@ func (s *Userservice) GrowUpStruct(u user) user {
 func TestGetUserById(t *testing.T) {
 	server := NewServer()
 	server.Register(new(Userservice), "UserService")
-	listener, _ := net.Listen("tcp", "127.0.0.1:7890")
+	l, _ := net.Listen("tcp", "127.0.0.1:0")
 	go func() {
 		for {
-			conn, err := listener.Accept()
+			conn, err := l.Accept()
 			if err != nil {
 				return
 			}
@@ -55,21 +55,21 @@ func TestGetUserById(t *testing.T) {
 		}
 	}()
 
-	client, _ := Dial("tcp", listener.Addr().String())
+	client, _ := Dial("tcp", l.Addr().String())
 	out, _ := client.Call("UserService", "GetUserById", []interface{}{1})
 	t.Log(out)
 
 	client.Close()
-	listener.Close()
+	l.Close()
 }
 
 func TestGetUserByIdInvalidNum(t *testing.T) {
 	server := NewServer()
 	server.Register(new(Userservice), "UserService")
-	listener, _ := net.Listen("tcp", "127.0.0.1:0")
+	l, _ := net.Listen("tcp", "127.0.0.1:0")
 	go func() {
 		for {
-			conn, err := listener.Accept()
+			conn, err := l.Accept()
 			if err != nil {
 				return
 			}
@@ -77,21 +77,21 @@ func TestGetUserByIdInvalidNum(t *testing.T) {
 		}
 	}()
 
-	client, _ := Dial("tcp", listener.Addr().String())
+	client, _ := Dial("tcp", l.Addr().String())
 	_, err := client.Call("UserService", "GetUserById", []interface{}{1, 2})
 	t.Log(err)
 
 	client.Close()
-	listener.Close()
+	l.Close()
 }
 
 func TestGetUserByIdInvalidType(t *testing.T) {
 	server := NewServer()
 	server.Register(new(Userservice), "UserService")
-	listener, _ := net.Listen("tcp", "127.0.0.1:0")
+	l, _ := net.Listen("tcp", "127.0.0.1:0")
 	go func() {
 		for {
-			conn, err := listener.Accept()
+			conn, err := l.Accept()
 			if err != nil {
 				return
 			}
@@ -99,21 +99,21 @@ func TestGetUserByIdInvalidType(t *testing.T) {
 		}
 	}()
 
-	client, _ := Dial("tcp", listener.Addr().String())
+	client, _ := Dial("tcp", l.Addr().String())
 	_, err := client.Call("UserService", "GetUserById", []interface{}{"1"})
 	t.Log(err)
 
 	client.Close()
-	listener.Close()
+	l.Close()
 }
 
 func TestServiceNotFound(t *testing.T) {
 	server := NewServer()
 	server.Register(new(Userservice), "UserService")
-	listener, _ := net.Listen("tcp", "127.0.0.1:0")
+	l, _ := net.Listen("tcp", "127.0.0.1:0")
 	go func() {
 		for {
-			conn, err := listener.Accept()
+			conn, err := l.Accept()
 			if err != nil {
 				return
 			}
@@ -121,21 +121,21 @@ func TestServiceNotFound(t *testing.T) {
 		}
 	}()
 
-	client, _ := Dial("tcp", listener.Addr().String())
+	client, _ := Dial("tcp", l.Addr().String())
 	_, err := client.Call("UserServicee", "GetUserById", []interface{}{"1"})
 	t.Log(err)
 
 	client.Close()
-	listener.Close()
+	l.Close()
 }
 
 func TestMethodNotFound(t *testing.T) {
 	server := NewServer()
 	server.Register(new(Userservice), "UserService")
-	listener, _ := net.Listen("tcp", "127.0.0.1:0")
+	l, _ := net.Listen("tcp", "127.0.0.1:0")
 	go func() {
 		for {
-			conn, err := listener.Accept()
+			conn, err := l.Accept()
 			if err != nil {
 				return
 			}
@@ -143,21 +143,21 @@ func TestMethodNotFound(t *testing.T) {
 		}
 	}()
 
-	client, _ := Dial("tcp", listener.Addr().String())
+	client, _ := Dial("tcp", l.Addr().String())
 	_, err := client.Call("UserService", "GetUserByIdd", []interface{}{"1"})
 	t.Log(err)
 
 	client.Close()
-	listener.Close()
+	l.Close()
 }
 
 func TestAdd(t *testing.T) {
 	server := NewServer()
 	server.Register(new(Userservice), "UserService")
-	listener, _ := net.Listen("tcp", "127.0.0.1:0")
+	l, _ := net.Listen("tcp", "127.0.0.1:0")
 	go func() {
 		for {
-			conn, err := listener.Accept()
+			conn, err := l.Accept()
 			if err != nil {
 				return
 			}
@@ -165,21 +165,21 @@ func TestAdd(t *testing.T) {
 		}
 	}()
 
-	client, _ := Dial("tcp", listener.Addr().String())
+	client, _ := Dial("tcp", l.Addr().String())
 	out, _ := client.Call("UserService", "Add", []interface{}{1, 2})
 	t.Log(out)
 
 	client.Close()
-	listener.Close()
+	l.Close()
 }
 
 func TestGrowUpPointer(t *testing.T) {
 	server := NewServer()
 	server.Register(new(Userservice), "UserService")
-	listener, _ := net.Listen("tcp", "127.0.0.1:0")
+	l, _ := net.Listen("tcp", "127.0.0.1:0")
 	go func() {
 		for {
-			conn, err := listener.Accept()
+			conn, err := l.Accept()
 			if err != nil {
 				return
 			}
@@ -196,21 +196,21 @@ func TestGrowUpPointer(t *testing.T) {
 		},
 	}
 
-	client, _ := Dial("tcp", listener.Addr().String())
+	client, _ := Dial("tcp", l.Addr().String())
 	out, _ := client.Call("UserService", "GrowUpPointer", []interface{}{&u})
 	t.Log(out)
 
 	client.Close()
-	listener.Close()
+	l.Close()
 }
 
 func TestGrowUpStruct(t *testing.T) {
 	server := NewServer()
 	server.Register(new(Userservice), "UserService")
-	listener, _ := net.Listen("tcp", "127.0.0.1:0")
+	l, _ := net.Listen("tcp", "127.0.0.1:0")
 	go func() {
 		for {
-			conn, err := listener.Accept()
+			conn, err := l.Accept()
 			if err != nil {
 				return
 			}
@@ -227,10 +227,10 @@ func TestGrowUpStruct(t *testing.T) {
 		},
 	}
 
-	client, _ := Dial("tcp", listener.Addr().String())
+	client, _ := Dial("tcp", l.Addr().String())
 	out, _ := client.Call("UserService", "GrowUpStruct", []interface{}{u})
 	t.Log(out)
 
 	client.Close()
-	listener.Close()
+	l.Close()
 }

@@ -41,6 +41,22 @@ func (s *Userservice) GrowUpStruct(u user) user {
 	return u
 }
 
+func (s *Userservice) Sum(nums []int) int {
+	sum := 0
+	for _, num := range nums {
+		sum += num
+	}
+	return sum
+}
+
+func (s *Userservice) SumPointer(nums *[]int) int {
+	sum := 0
+	for _, num := range *nums {
+		sum += num
+	}
+	return sum
+}
+
 func TestGetUserById(t *testing.T) {
 	server := NewServer()
 	server.Register(new(Userservice), "UserService")
@@ -229,6 +245,52 @@ func TestGrowUpStruct(t *testing.T) {
 
 	client, _ := Dial("tcp", l.Addr().String())
 	out, _ := client.Call("UserService", "GrowUpStruct", []interface{}{u})
+	t.Log(out)
+
+	client.Close()
+	l.Close()
+}
+
+func TestSum(t *testing.T) {
+	server := NewServer()
+	server.Register(new(Userservice), "UserService")
+	l, _ := net.Listen("tcp", "127.0.0.1:0")
+	go func() {
+		for {
+			conn, err := l.Accept()
+			if err != nil {
+				return
+			}
+			go server.ServeConn(conn)
+		}
+	}()
+
+	client, _ := Dial("tcp", l.Addr().String())
+	out, err := client.Call("UserService", "Sum", []interface{}{[]int{1, 2, 3}})
+	t.Log(err)
+	t.Log(out)
+
+	client.Close()
+	l.Close()
+}
+
+func TestSumPointer(t *testing.T) {
+	server := NewServer()
+	server.Register(new(Userservice), "UserService")
+	l, _ := net.Listen("tcp", "127.0.0.1:0")
+	go func() {
+		for {
+			conn, err := l.Accept()
+			if err != nil {
+				return
+			}
+			go server.ServeConn(conn)
+		}
+	}()
+
+	client, _ := Dial("tcp", l.Addr().String())
+	out, err := client.Call("UserService", "SumPointer", []interface{}{&[]int{1, 2, 3}})
+	t.Log(err)
 	t.Log(out)
 
 	client.Close()

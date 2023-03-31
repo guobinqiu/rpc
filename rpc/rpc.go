@@ -152,6 +152,19 @@ func (s *Server) match(p param, mtype reflect.Type) ([]reflect.Value, bool) {
 				v = v.Elem()
 			}
 			inValues = append(inValues, v)
+		} else if reflect.ValueOf(arg).Type().Kind() == reflect.Slice {
+			tt := t
+			if t.Kind() == reflect.Ptr {
+				tt = t.Elem()
+			}
+			v := reflect.New(tt)
+			if !s.copySlice(arg.([]any), reflect.Indirect(v), tt.Elem()) {
+				return nil, false
+			}
+			if t.Kind() != reflect.Pointer {
+				v = v.Elem()
+			}
+			inValues = append(inValues, v)
 		} else {
 			return nil, false
 		}
@@ -169,6 +182,19 @@ func (s *Server) mapToStruct(arg map[string]any, v reflect.Value) bool {
 			structFieldValue.Set(reflect.ValueOf(value).Convert(structFieldValue.Type()))
 		} else if structFieldValue.Kind() == reflect.Struct {
 			return s.mapToStruct(value.(map[string]any), structFieldValue)
+		} else {
+			return false
+		}
+	}
+	return true
+}
+
+func (s *Server) copySlice(arg []any, v reflect.Value, t reflect.Type) bool {
+	for _, value := range arg {
+		if reflect.ValueOf(value).Type().ConvertibleTo(t) {
+			v.Set(reflect.Append(v, reflect.ValueOf(value).Convert(t)))
+		} else if reflect.ValueOf(value).Kind() == reflect.Slice {
+			return s.copySlice(value.([]any), v, t)
 		} else {
 			return false
 		}

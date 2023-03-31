@@ -189,7 +189,7 @@ func TestGrowUpPointer(t *testing.T) {
 
 	u := user{
 		Name: "Guobin",
-		Age:  100,
+		Age:  40,
 		Address: address{
 			HomeAddr:   "aaaaa",
 			OfficeAddr: "bbbbb",
@@ -220,7 +220,7 @@ func TestGrowUpStruct(t *testing.T) {
 
 	u := user{
 		Name: "Guobin",
-		Age:  100,
+		Age:  40,
 		Address: address{
 			HomeAddr:   "aaaaa",
 			OfficeAddr: "bbbbb",

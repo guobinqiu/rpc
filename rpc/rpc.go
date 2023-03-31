@@ -124,8 +124,8 @@ func (s *Server) ServeConn(conn net.Conn) {
 		}
 
 		outValues := reflect.ValueOf(s.services[p.ServiceName]).MethodByName(p.MethodName).Call(inValues)
-		for _, i := range outValues {
-			p.OutArgs = append(p.OutArgs, i.Interface())
+		for _, v := range outValues {
+			p.OutArgs = append(p.OutArgs, v.Interface())
 		}
 
 		encoder.Encode(&p)

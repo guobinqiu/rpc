@@ -13,7 +13,7 @@ func main() {
 	}
 
 	out, _ := client.Call("UserService", "Add", []interface{}{1, 2})
-	fmt.Println(out.ToInt64(0))
+	fmt.Println(out.Get(0))
 
 	client.Close()
 }

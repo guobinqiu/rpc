@@ -57,6 +57,14 @@ func (s *Userservice) SumPointer(nums *[]int) int {
 	return sum
 }
 
+func (s *Userservice) SumNestedSlice(nums [][]int) int {
+	sum := 0
+	for _, num := range nums {
+		sum += s.Sum(num)
+	}
+	return sum
+}
+
 func TestGetUserById(t *testing.T) {
 	server := NewServer()
 	server.Register(new(Userservice), "UserService")
@@ -290,6 +298,29 @@ func TestSumPointer(t *testing.T) {
 
 	client, _ := Dial("tcp", l.Addr().String())
 	out, err := client.Call("UserService", "SumPointer", []interface{}{&[]int{1, 2, 3}})
+	t.Log(err)
+	t.Log(out)
+
+	client.Close()
+	l.Close()
+}
+
+func TestSumNestedSlice(t *testing.T) {
+	server := NewServer()
+	server.Register(new(Userservice), "UserService")
+	l, _ := net.Listen("tcp", "127.0.0.1:0")
+	go func() {
+		for {
+			conn, err := l.Accept()
+			if err != nil {
+				return
+			}
+			go server.ServeConn(conn)
+		}
+	}()
+
+	client, _ := Dial("tcp", l.Addr().String())
+	out, err := client.Call("UserService", "SumNestedSlice", []interface{}{[][]int{{1, 2}, {3}}})
 	t.Log(err)
 	t.Log(out)
 

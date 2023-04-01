@@ -3,6 +3,7 @@ package rpc
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"net"
 	"reflect"
@@ -194,8 +195,10 @@ func (s *Server) copySlice(arg []any, v reflect.Value, t reflect.Type) bool {
 		if reflect.ValueOf(value).Type().ConvertibleTo(t) {
 			v.Set(reflect.Append(v, reflect.ValueOf(value).Convert(t)))
 		} else if reflect.ValueOf(value).Kind() == reflect.Slice {
+			fmt.Println("11111")
 			return s.copySlice(value.([]any), v, t)
 		} else {
+			fmt.Println("22222")
 			return false
 		}
 	}

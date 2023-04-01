@@ -96,6 +96,8 @@ func (s *Server) ServeConn(conn net.Conn) {
 			break
 		}
 
+		fmt.Println(p.InArgs)
+
 		_, ok := s.services[p.ServiceName]
 		if !ok {
 			p.Error = "服务没找到"
@@ -190,15 +192,39 @@ func (s *Server) mapToStruct(arg map[string]any, v reflect.Value) bool {
 	return true
 }
 
+func (s *Server) mapToStruct2(arg map[string]any, v reflect.Value) bool {
+	for key, value := range arg {
+		structFieldValue := v.FieldByName(key)
+		if !structFieldValue.IsValid() {
+			return false
+		}
+		if reflect.ValueOf(value).Type().ConvertibleTo(structFieldValue.Type()) {
+			structFieldValue.Set(reflect.ValueOf(value).Convert(structFieldValue.Type()))
+		} else if structFieldValue.Kind() == reflect.Struct {
+			return s.mapToStruct(value.(map[string]any), structFieldValue)
+		} else {
+			return false
+		}
+	}
+	return true
+}
+
 func (s *Server) copySlice(arg []any, v reflect.Value, t reflect.Type) bool {
 	for _, value := range arg {
 		if reflect.ValueOf(value).Type().ConvertibleTo(t) {
 			v.Set(reflect.Append(v, reflect.ValueOf(value).Convert(t)))
-		} else if reflect.ValueOf(value).Kind() == reflect.Slice {
-			fmt.Println("11111")
-			return s.copySlice(value.([]any), v, t)
+		} else if reflect.ValueOf(value).Kind() == reflect.Map {
+			tt := t
+			if t.Kind() == reflect.Ptr {
+				tt = t.Elem()
+			}
+			v2 := reflect.New(tt)
+			s.mapToStruct(value.(map[string]any), reflect.Indirect(v2))
+			if t.Kind() != reflect.Pointer {
+				v2 = v2.Elem()
+			}
+			v.Set(reflect.Append(v, v2))
 		} else {
-			fmt.Println("22222")
 			return false
 		}
 	}

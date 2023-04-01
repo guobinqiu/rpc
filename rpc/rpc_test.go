@@ -57,10 +57,18 @@ func (s *Userservice) SumPointer(nums *[]int) int {
 	return sum
 }
 
-func (s *Userservice) SumNestedSlice(nums [][]int) int {
+func (s *Userservice) SumUserAgePointer(users []*user) int {
 	sum := 0
-	for _, num := range nums {
-		sum += s.Sum(num)
+	for _, u := range users {
+		sum += u.Age
+	}
+	return sum
+}
+
+func (s *Userservice) SumUserAgeStruct(users []user) int {
+	sum := 0
+	for _, u := range users {
+		sum += u.Age
 	}
 	return sum
 }
@@ -305,7 +313,7 @@ func TestSumPointer(t *testing.T) {
 	l.Close()
 }
 
-func TestSumNestedSlice(t *testing.T) {
+func TestSumUserAgePointer(t *testing.T) {
 	server := NewServer()
 	server.Register(new(Userservice), "UserService")
 	l, _ := net.Listen("tcp", "127.0.0.1:0")
@@ -320,7 +328,40 @@ func TestSumNestedSlice(t *testing.T) {
 	}()
 
 	client, _ := Dial("tcp", l.Addr().String())
-	out, err := client.Call("UserService", "SumNestedSlice", []interface{}{[][]int{{1, 2}, {3}}})
+	out, err := client.Call("UserService", "SumUserAgePointer", []interface{}{[]*user{
+		{Age: 1},
+		{Age: 2},
+		{Age: 3},
+	},
+	})
+	t.Log(err)
+	t.Log(out)
+
+	client.Close()
+	l.Close()
+}
+
+func TestSumUserAgeStruct(t *testing.T) {
+	server := NewServer()
+	server.Register(new(Userservice), "UserService")
+	l, _ := net.Listen("tcp", "127.0.0.1:0")
+	go func() {
+		for {
+			conn, err := l.Accept()
+			if err != nil {
+				return
+			}
+			go server.ServeConn(conn)
+		}
+	}()
+
+	client, _ := Dial("tcp", l.Addr().String())
+	out, err := client.Call("UserService", "SumUserAgeStruct", []interface{}{[]*user{
+		{Age: 1},
+		{Age: 2},
+		{Age: 3},
+	},
+	})
 	t.Log(err)
 	t.Log(out)
 

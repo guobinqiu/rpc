@@ -3,7 +3,6 @@ package rpc
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
 	"net"
 	"reflect"
@@ -38,6 +37,12 @@ func Dial(network, address string) (*Client, error) {
 
 func (c *Client) Call(serviceName, methodName string, inArgs []any) (*Out, error) {
 	var p param
+
+	for _, arg := range inArgs {
+		if reflect.TypeOf(arg).Kind() == reflect.Func {
+			return nil, errors.New("不支持函数类型")
+		}
+	}
 
 	if err := c.encoder.Encode(param{
 		ServiceName: serviceName,
@@ -95,8 +100,6 @@ func (s *Server) ServeConn(conn net.Conn) {
 		if err := decoder.Decode(&p); err == io.EOF {
 			break
 		}
-
-		fmt.Println(p.InArgs)
 
 		_, ok := s.services[p.ServiceName]
 		if !ok {

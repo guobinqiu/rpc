@@ -1,6 +1,7 @@
 package rpc
 
 import (
+	"fmt"
 	"net"
 	"testing"
 )
@@ -71,6 +72,10 @@ func (s *Userservice) SumUserAgeStruct(users []user) int {
 		sum += u.Age
 	}
 	return sum
+}
+
+func (s *Userservice) TestFunc(f func(int, int) int) {
+	fmt.Println("a+b=", f(1, 2))
 }
 
 func TestGetUserById(t *testing.T) {
@@ -362,6 +367,32 @@ func TestSumUserAgeStruct(t *testing.T) {
 		{Age: 3},
 	},
 	})
+	t.Log(err)
+	t.Log(out)
+
+	client.Close()
+	l.Close()
+}
+
+func TestTestFunc(t *testing.T) {
+	server := NewServer()
+	server.Register(new(Userservice), "UserService")
+	l, _ := net.Listen("tcp", "127.0.0.1:0")
+	go func() {
+		for {
+			conn, err := l.Accept()
+			if err != nil {
+				return
+			}
+			go server.ServeConn(conn)
+		}
+	}()
+
+	client, _ := Dial("tcp", l.Addr().String())
+	out, err := client.Call("UserService", "TestFunc", []interface{}{func(a, b int) int {
+		return a + b
+	}})
+
 	t.Log(err)
 	t.Log(out)
 

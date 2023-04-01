@@ -192,23 +192,6 @@ func (s *Server) mapToStruct(arg map[string]any, v reflect.Value) bool {
 	return true
 }
 
-func (s *Server) mapToStruct2(arg map[string]any, v reflect.Value) bool {
-	for key, value := range arg {
-		structFieldValue := v.FieldByName(key)
-		if !structFieldValue.IsValid() {
-			return false
-		}
-		if reflect.ValueOf(value).Type().ConvertibleTo(structFieldValue.Type()) {
-			structFieldValue.Set(reflect.ValueOf(value).Convert(structFieldValue.Type()))
-		} else if structFieldValue.Kind() == reflect.Struct {
-			return s.mapToStruct(value.(map[string]any), structFieldValue)
-		} else {
-			return false
-		}
-	}
-	return true
-}
-
 func (s *Server) copySlice(arg []any, v reflect.Value, t reflect.Type) bool {
 	for _, value := range arg {
 		if reflect.ValueOf(value).Type().ConvertibleTo(t) {

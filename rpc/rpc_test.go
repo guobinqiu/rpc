@@ -326,8 +326,7 @@ func TestSumPointer(t *testing.T) {
 	}()
 
 	client, _ := Dial("tcp", l.Addr().String())
-	p := []int{1, 2, 3}
-	out, err := client.Call("UserService", "SumPointer", []interface{}{&p})
+	out, err := client.Call("UserService", "SumPointer", []interface{}{&[]int{1, 2, 3}})
 	t.Log(err)
 	t.Log(out)
 

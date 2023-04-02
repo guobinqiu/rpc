@@ -144,35 +144,42 @@ func (s *Server) match(p param, mtype reflect.Type) ([]reflect.Value, bool) {
 		t := mtype.In(i + 1)
 		if reflect.ValueOf(arg).Type().ConvertibleTo(t) {
 			inValues = append(inValues, reflect.ValueOf(arg).Convert(t))
-		} else if reflect.ValueOf(arg).Type().Kind() == reflect.Map {
-			tt := t
-			if t.Kind() == reflect.Ptr {
-				tt = t.Elem()
-			}
-			v := reflect.New(tt)
+		} else if t.Kind() == reflect.Ptr && t.Elem().Kind() == reflect.Struct {
+			v := reflect.New(t.Elem())
 			if !s.mapToStruct(arg.(map[string]any), v.Elem()) {
 				return nil, false
 			}
-			if t.Kind() != reflect.Ptr {
-				v = v.Elem()
-			}
 			inValues = append(inValues, v)
-		} else if reflect.ValueOf(arg).Type().Kind() == reflect.Slice {
-			if t.Kind() == reflect.Slice || t.Elem().Kind() == reflect.Slice {
-				v := reflect.New(reflect.SliceOf(t.Elem())).Elem()
-				if !s.copySlice(arg.([]any), v, t.Elem()) {
-					return nil, false
-				}
-				inValues = append(inValues, v)
-			} else if t.Kind() == reflect.Array {
-				v := reflect.New(reflect.ArrayOf(t.Len(), t.Elem())).Elem()
-				if !s.copyArray(arg.([]any), v, t.Elem()) {
-					return nil, false
-				}
-				inValues = append(inValues, v)
-			} else {
+		} else if t.Kind() == reflect.Struct {
+			v := reflect.New(t)
+			if !s.mapToStruct(arg.(map[string]any), v.Elem()) {
 				return nil, false
 			}
+			inValues = append(inValues, v.Elem())
+		} else if t.Kind() == reflect.Ptr && t.Elem().Kind() == reflect.Slice {
+			v := reflect.New(reflect.SliceOf(t.Elem().Elem()))
+			if !s.copySlice(arg.([]any), v.Elem(), t.Elem().Elem()) {
+				return nil, false
+			}
+			inValues = append(inValues, v)
+		} else if t.Kind() == reflect.Slice {
+			v := reflect.New(reflect.SliceOf(t.Elem()))
+			if !s.copySlice(arg.([]any), v.Elem(), t.Elem()) {
+				return nil, false
+			}
+			inValues = append(inValues, v.Elem())
+		} else if t.Kind() == reflect.Ptr && t.Elem().Kind() == reflect.Array {
+			v := reflect.New(reflect.ArrayOf(t.Elem().Len(), t.Elem().Elem()))
+			if !s.copyArray(arg.([]any), v.Elem(), t.Elem().Elem()) {
+				return nil, false
+			}
+			inValues = append(inValues, v)
+		} else if t.Kind() == reflect.Array {
+			v := reflect.New(reflect.ArrayOf(t.Len(), t.Elem()))
+			if !s.copyArray(arg.([]any), v.Elem(), t.Elem()) {
+				return nil, false
+			}
+			inValues = append(inValues, v.Elem())
 		} else {
 			return nil, false
 		}
@@ -203,19 +210,18 @@ func (s *Server) copySlice(arg []any, v reflect.Value, t reflect.Type) bool {
 	for _, value := range arg {
 		if reflect.ValueOf(value).Type().ConvertibleTo(t) {
 			v.Set(reflect.Append(v, reflect.ValueOf(value).Convert(t)))
-		} else if reflect.ValueOf(value).Kind() == reflect.Map {
-			tt := t
-			if t.Kind() == reflect.Ptr {
-				tt = t.Elem()
-			}
-			v2 := reflect.New(tt)
+		} else if t.Kind() == reflect.Ptr && t.Elem().Kind() == reflect.Struct {
+			v2 := reflect.New(t.Elem())
 			if !s.mapToStruct(value.(map[string]any), v2.Elem()) {
 				return false
 			}
-			if t.Kind() != reflect.Ptr {
-				v2 = v2.Elem()
-			}
 			v.Set(reflect.Append(v, v2))
+		} else if t.Kind() == reflect.Struct {
+			v2 := reflect.New(t)
+			if !s.mapToStruct(value.(map[string]any), v2.Elem()) {
+				return false
+			}
+			v.Set(reflect.Append(v, v2.Elem()))
 		} else {
 			return false
 		}
@@ -227,19 +233,18 @@ func (s *Server) copyArray(arg []any, v reflect.Value, t reflect.Type) bool {
 	for i, value := range arg {
 		if reflect.ValueOf(value).Type().ConvertibleTo(t) {
 			v.Index(i).Set(reflect.ValueOf(value).Convert(t))
-		} else if reflect.ValueOf(value).Kind() == reflect.Map {
-			tt := t
-			if t.Kind() == reflect.Ptr {
-				tt = t.Elem()
-			}
-			v2 := reflect.New(tt)
+		} else if t.Kind() == reflect.Ptr && t.Elem().Kind() == reflect.Struct {
+			v2 := reflect.New(t.Elem())
 			if !s.mapToStruct(value.(map[string]any), v2.Elem()) {
 				return false
 			}
-			if t.Kind() != reflect.Ptr {
-				v2 = v2.Elem()
-			}
 			v.Index(i).Set(v2)
+		} else if t.Kind() == reflect.Struct {
+			v2 := reflect.New(t)
+			if !s.mapToStruct(value.(map[string]any), v2.Elem()) {
+				return false
+			}
+			v.Index(i).Set(v2.Elem())
 		} else {
 			return false
 		}

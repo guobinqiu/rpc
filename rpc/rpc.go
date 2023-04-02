@@ -159,18 +159,28 @@ func (s *Server) match(p param, mtype reflect.Type) ([]reflect.Value, bool) {
 			}
 			inValues = append(inValues, v)
 		} else if reflect.ValueOf(arg).Type().Kind() == reflect.Slice {
-			tt := t
-			if t.Kind() == reflect.Ptr {
-				tt = t.Elem()
-			}
-			v := reflect.New(tt)
-			if !s.copySlice(arg.([]any), reflect.Indirect(v), tt.Elem()) {
+			if t.Kind() == reflect.Slice || t.Elem().Kind() == reflect.Slice {
+				tt := t
+				if t.Kind() == reflect.Ptr {
+					tt = t.Elem()
+				}
+				v := reflect.New(tt)
+				if !s.copySlice(arg.([]any), reflect.Indirect(v), tt.Elem()) {
+					return nil, false
+				}
+				if t.Kind() != reflect.Pointer {
+					v = v.Elem()
+				}
+				inValues = append(inValues, v)
+			} else if t.Kind() == reflect.Array {
+				v := reflect.New(reflect.ArrayOf(t.Len(), t.Elem())).Elem()
+				if !s.copyArray(arg.([]any), reflect.Indirect(v), t.Elem()) {
+					return nil, false
+				}
+				inValues = append(inValues, v)
+			} else {
 				return nil, false
 			}
-			if t.Kind() != reflect.Pointer {
-				v = v.Elem()
-			}
-			inValues = append(inValues, v)
 		} else {
 			return nil, false
 		}
@@ -210,6 +220,28 @@ func (s *Server) copySlice(arg []any, v reflect.Value, t reflect.Type) bool {
 				v2 = v2.Elem()
 			}
 			v.Set(reflect.Append(v, v2))
+		} else {
+			return false
+		}
+	}
+	return true
+}
+
+func (s *Server) copyArray(arg []any, v reflect.Value, t reflect.Type) bool {
+	for i, value := range arg {
+		if reflect.ValueOf(value).Type().ConvertibleTo(t) {
+			v.Index(i).Set(reflect.ValueOf(value).Convert(t))
+		} else if reflect.ValueOf(value).Kind() == reflect.Map {
+			tt := t
+			if t.Kind() == reflect.Ptr {
+				tt = t.Elem()
+			}
+			v2 := reflect.New(tt)
+			s.mapToStruct(value.(map[string]any), reflect.Indirect(v2))
+			if t.Kind() != reflect.Pointer {
+				v2 = v2.Elem()
+			}
+			v.Index(i).Set(v2)
 		} else {
 			return false
 		}

@@ -78,6 +78,22 @@ func (s *Userservice) TestFunc(f func(int, int) int) {
 	fmt.Println("a+b=", f(1, 2))
 }
 
+func (s *Userservice) TestArrStruct(users [3]user) int {
+	sum := 0
+	for _, u := range users {
+		sum += u.Age
+	}
+	return sum
+}
+
+func (s *Userservice) TestArrPointer(users [3]*user) int {
+	sum := 0
+	for _, u := range users {
+		sum += u.Age
+	}
+	return sum
+}
+
 func TestGetUserById(t *testing.T) {
 	server := NewServer()
 	server.Register(new(Userservice), "UserService")
@@ -310,7 +326,8 @@ func TestSumPointer(t *testing.T) {
 	}()
 
 	client, _ := Dial("tcp", l.Addr().String())
-	out, err := client.Call("UserService", "SumPointer", []interface{}{&[]int{1, 2, 3}})
+	p := []int{1, 2, 3}
+	out, err := client.Call("UserService", "SumPointer", []interface{}{&p})
 	t.Log(err)
 	t.Log(out)
 
@@ -393,6 +410,62 @@ func TestTestFunc(t *testing.T) {
 		return a + b
 	}})
 
+	t.Log(err)
+	t.Log(out)
+
+	client.Close()
+	l.Close()
+}
+
+func TestTestArrStruct(t *testing.T) {
+	server := NewServer()
+	server.Register(new(Userservice), "UserService")
+	l, _ := net.Listen("tcp", "127.0.0.1:0")
+	go func() {
+		for {
+			conn, err := l.Accept()
+			if err != nil {
+				return
+			}
+			go server.ServeConn(conn)
+		}
+	}()
+
+	client, _ := Dial("tcp", l.Addr().String())
+	out, err := client.Call("UserService", "TestArrStruct", []interface{}{[3]user{
+		{Age: 1},
+		{Age: 2},
+		{Age: 3},
+	},
+	})
+	t.Log(err)
+	t.Log(out)
+
+	client.Close()
+	l.Close()
+}
+
+func TestTestArrPointer(t *testing.T) {
+	server := NewServer()
+	server.Register(new(Userservice), "UserService")
+	l, _ := net.Listen("tcp", "127.0.0.1:0")
+	go func() {
+		for {
+			conn, err := l.Accept()
+			if err != nil {
+				return
+			}
+			go server.ServeConn(conn)
+		}
+	}()
+
+	client, _ := Dial("tcp", l.Addr().String())
+	out, err := client.Call("UserService", "TestArrPointer", []interface{}{[3]*user{
+		{Age: 1},
+		{Age: 2},
+		{Age: 3},
+	},
+	})
 	t.Log(err)
 	t.Log(out)
 

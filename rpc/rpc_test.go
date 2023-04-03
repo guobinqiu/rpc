@@ -1,16 +1,21 @@
 package rpc
 
 import (
+	"encoding/json"
 	"fmt"
 	"net"
 	"testing"
 )
 
 type user struct {
-	ID      int64
-	Name    string
-	Age     int
-	Address address
+	ID           int64
+	Name         string
+	Age          int
+	Address      address
+	HobbiesSlice []string
+	HobbiesArr   [3]string
+	SonsStruct   []user
+	SonsPtr      []*user
 }
 
 type address struct {
@@ -467,6 +472,53 @@ func TestTestArrPointer(t *testing.T) {
 	})
 	t.Log(err)
 	t.Log(out)
+
+	client.Close()
+	l.Close()
+}
+
+func TestArrInsideStruct(t *testing.T) {
+	server := NewServer()
+	server.Register(new(Userservice), "UserService")
+	l, _ := net.Listen("tcp", "127.0.0.1:0")
+	go func() {
+		for {
+			conn, err := l.Accept()
+			if err != nil {
+				return
+			}
+			go server.ServeConn(conn)
+		}
+	}()
+
+	u := user{
+		Name: "Guobin",
+		HobbiesSlice: []string{
+			"football",
+			"basketball",
+		},
+		HobbiesArr: [3]string{
+			"football",
+			"basketball",
+		},
+		SonsPtr: []*user{
+			{Name: "a"},
+			{Name: "b"},
+		},
+		SonsStruct: []user{
+			{Name: "aa"},
+			{Name: "bb"},
+		},
+	}
+
+	client, _ := Dial("tcp", l.Addr().String())
+	out, _ := client.Call("UserService", "GrowUpPointer", []interface{}{&u})
+
+	b, _ := json.Marshal(out.Get(0))
+	json.Unmarshal(b, &u)
+
+	t.Log(u.SonsPtr[0].Name)
+	t.Log(u.SonsStruct[0].Name)
 
 	client.Close()
 	l.Close()

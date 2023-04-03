@@ -142,9 +142,7 @@ func (s *Server) match(p param, mtype reflect.Type) ([]reflect.Value, bool) {
 	var inValues []reflect.Value
 	for i, arg := range p.InArgs {
 		t := mtype.In(i + 1)
-		if reflect.ValueOf(arg).Type().ConvertibleTo(t) {
-			inValues = append(inValues, reflect.ValueOf(arg).Convert(t))
-		} else if t.Kind() == reflect.Ptr && t.Elem().Kind() == reflect.Struct {
+		if t.Kind() == reflect.Ptr && t.Elem().Kind() == reflect.Struct {
 			v := reflect.New(t.Elem())
 			if !s.mapToStruct(arg.(map[string]any), v.Elem()) {
 				return nil, false
@@ -180,6 +178,8 @@ func (s *Server) match(p param, mtype reflect.Type) ([]reflect.Value, bool) {
 				return nil, false
 			}
 			inValues = append(inValues, v.Elem())
+		} else if reflect.ValueOf(arg).Type().ConvertibleTo(t) {
+			inValues = append(inValues, reflect.ValueOf(arg).Convert(t))
 		} else {
 			return nil, false
 		}
@@ -193,12 +193,23 @@ func (s *Server) mapToStruct(arg map[string]any, v reflect.Value) bool {
 		if !structFieldValue.IsValid() {
 			return false
 		}
-		if reflect.ValueOf(value).Type().ConvertibleTo(structFieldValue.Type()) {
-			structFieldValue.Set(reflect.ValueOf(value).Convert(structFieldValue.Type()))
-		} else if structFieldValue.Kind() == reflect.Struct {
+		if structFieldValue.Kind() == reflect.Struct {
 			if !s.mapToStruct(value.(map[string]any), structFieldValue) {
 				return false
 			}
+		} else if structFieldValue.Kind() == reflect.Slice {
+			if value == nil {
+				value = make([]any, 0)
+			}
+			if !s.copySlice(value.([]any), structFieldValue, structFieldValue.Type().Elem()) {
+				return false
+			}
+		} else if structFieldValue.Kind() == reflect.Array {
+			if !s.copyArray(value.([]any), structFieldValue, structFieldValue.Type().Elem()) {
+				return false
+			}
+		} else if reflect.ValueOf(value).Type().ConvertibleTo(structFieldValue.Type()) {
+			structFieldValue.Set(reflect.ValueOf(value).Convert(structFieldValue.Type()))
 		} else {
 			return false
 		}
@@ -208,9 +219,7 @@ func (s *Server) mapToStruct(arg map[string]any, v reflect.Value) bool {
 
 func (s *Server) copySlice(arg []any, v reflect.Value, t reflect.Type) bool {
 	for _, value := range arg {
-		if reflect.ValueOf(value).Type().ConvertibleTo(t) {
-			v.Set(reflect.Append(v, reflect.ValueOf(value).Convert(t)))
-		} else if t.Kind() == reflect.Ptr && t.Elem().Kind() == reflect.Struct {
+		if t.Kind() == reflect.Ptr && t.Elem().Kind() == reflect.Struct {
 			v2 := reflect.New(t.Elem())
 			if !s.mapToStruct(value.(map[string]any), v2.Elem()) {
 				return false
@@ -222,6 +231,8 @@ func (s *Server) copySlice(arg []any, v reflect.Value, t reflect.Type) bool {
 				return false
 			}
 			v.Set(reflect.Append(v, v2.Elem()))
+		} else if reflect.ValueOf(value).Type().ConvertibleTo(t) {
+			v.Set(reflect.Append(v, reflect.ValueOf(value).Convert(t)))
 		} else {
 			return false
 		}
@@ -231,9 +242,7 @@ func (s *Server) copySlice(arg []any, v reflect.Value, t reflect.Type) bool {
 
 func (s *Server) copyArray(arg []any, v reflect.Value, t reflect.Type) bool {
 	for i, value := range arg {
-		if reflect.ValueOf(value).Type().ConvertibleTo(t) {
-			v.Index(i).Set(reflect.ValueOf(value).Convert(t))
-		} else if t.Kind() == reflect.Ptr && t.Elem().Kind() == reflect.Struct {
+		if t.Kind() == reflect.Ptr && t.Elem().Kind() == reflect.Struct {
 			v2 := reflect.New(t.Elem())
 			if !s.mapToStruct(value.(map[string]any), v2.Elem()) {
 				return false
@@ -245,6 +254,8 @@ func (s *Server) copyArray(arg []any, v reflect.Value, t reflect.Type) bool {
 				return false
 			}
 			v.Index(i).Set(v2.Elem())
+		} else if reflect.ValueOf(value).Type().ConvertibleTo(t) {
+			v.Index(i).Set(reflect.ValueOf(value).Convert(t))
 		} else {
 			return false
 		}

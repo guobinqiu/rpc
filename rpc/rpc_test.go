@@ -16,6 +16,7 @@ type user struct {
 	HobbiesArr   [3]string
 	SonsStruct   []user
 	SonsPtr      []*user
+	Daughter     *[]user
 }
 
 type address struct {
@@ -506,8 +507,12 @@ func TestArrInsideStruct(t *testing.T) {
 			{Name: "b"},
 		},
 		SonsStruct: []user{
-			{Name: "aa"},
-			{Name: "bb"},
+			{Name: "c"},
+			{Name: "d"},
+		},
+		Daughter: &[]user{
+			{Name: "eee"},
+			{Name: "fff"},
 		},
 	}
 
@@ -519,6 +524,7 @@ func TestArrInsideStruct(t *testing.T) {
 
 	t.Log(u.SonsPtr[0].Name)
 	t.Log(u.SonsStruct[0].Name)
+	t.Log((*u.Daughter)[0].Name)
 
 	client.Close()
 	l.Close()

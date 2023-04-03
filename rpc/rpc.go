@@ -229,17 +229,17 @@ func (s *Server) mapToStruct(arg map[string]any, v reflect.Value) bool {
 func (s *Server) copySlice(arg []any, v reflect.Value, t reflect.Type) bool {
 	for _, value := range arg {
 		if t.Kind() == reflect.Ptr && t.Elem().Kind() == reflect.Struct {
-			v2 := reflect.New(t.Elem())
-			if !s.mapToStruct(value.(map[string]any), v2.Elem()) {
+			vv := reflect.New(t.Elem())
+			if !s.mapToStruct(value.(map[string]any), vv.Elem()) {
 				return false
 			}
-			v.Set(reflect.Append(v, v2))
+			v.Set(reflect.Append(v, vv))
 		} else if t.Kind() == reflect.Struct {
-			v2 := reflect.New(t)
-			if !s.mapToStruct(value.(map[string]any), v2.Elem()) {
+			vv := reflect.New(t)
+			if !s.mapToStruct(value.(map[string]any), vv.Elem()) {
 				return false
 			}
-			v.Set(reflect.Append(v, v2.Elem()))
+			v.Set(reflect.Append(v, vv.Elem()))
 		} else if value != nil && reflect.ValueOf(value).Type().ConvertibleTo(t) {
 			v.Set(reflect.Append(v, reflect.ValueOf(value).Convert(t)))
 		} else {
@@ -252,17 +252,17 @@ func (s *Server) copySlice(arg []any, v reflect.Value, t reflect.Type) bool {
 func (s *Server) copyArray(arg []any, v reflect.Value, t reflect.Type) bool {
 	for i, value := range arg {
 		if t.Kind() == reflect.Ptr && t.Elem().Kind() == reflect.Struct {
-			v2 := reflect.New(t.Elem())
-			if !s.mapToStruct(value.(map[string]any), v2.Elem()) {
+			vv := reflect.New(t.Elem())
+			if !s.mapToStruct(value.(map[string]any), vv.Elem()) {
 				return false
 			}
-			v.Index(i).Set(v2)
+			v.Index(i).Set(vv)
 		} else if t.Kind() == reflect.Struct {
-			v2 := reflect.New(t)
-			if !s.mapToStruct(value.(map[string]any), v2.Elem()) {
+			vv := reflect.New(t)
+			if !s.mapToStruct(value.(map[string]any), vv.Elem()) {
 				return false
 			}
-			v.Index(i).Set(v2.Elem())
+			v.Index(i).Set(vv.Elem())
 		} else if value != nil && reflect.ValueOf(value).Type().ConvertibleTo(t) {
 			v.Index(i).Set(reflect.ValueOf(value).Convert(t))
 		} else {

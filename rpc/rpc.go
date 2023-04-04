@@ -144,17 +144,17 @@ func (s *Server) match(p param, mtype reflect.Type) ([]reflect.Value, bool) {
 	for i, arg := range p.InArgs {
 		t := mtype.In(i + 1)
 		if t == reflect.TypeOf(&time.Time{}) {
-			t, err := time.Parse(time.RFC3339, arg.(string))
+			v, err := time.Parse(time.RFC3339, arg.(string))
 			if err != nil {
 				return nil, false
 			}
-			inValues = append(inValues, reflect.ValueOf(&t))
+			inValues = append(inValues, reflect.ValueOf(&v))
 		} else if t == reflect.TypeOf(time.Time{}) {
-			t, err := time.Parse(time.RFC3339, arg.(string))
+			v, err := time.Parse(time.RFC3339, arg.(string))
 			if err != nil {
 				return nil, false
 			}
-			inValues = append(inValues, reflect.ValueOf(t))
+			inValues = append(inValues, reflect.ValueOf(v))
 		} else if t.Kind() == reflect.Ptr && t.Elem().Kind() == reflect.Struct {
 			v := reflect.New(t.Elem())
 			if !s.mapToStruct(arg.(map[string]any), v.Elem()) {

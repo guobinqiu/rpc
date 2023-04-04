@@ -5,5 +5,5 @@ RPC
 ### Run test
 
 ```
-go clean -testcache && go test -v
+go clean -testcache && go test -v ./rpc
 ```

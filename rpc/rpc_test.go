@@ -5,18 +5,20 @@ import (
 	"fmt"
 	"net"
 	"testing"
+	"time"
 )
 
 type user struct {
-	ID           int64
-	Name         string
-	Age          int
-	Address      address
-	HobbiesSlice []string
-	HobbiesArr   [3]string
-	SonsStruct   []user
-	SonsPtr      []*user
-	Daughter     *[]user
+	ID             int64
+	Name           string
+	Age            int
+	Address        address
+	HobbiesSlice   []string
+	HobbiesArr     [3]string
+	SliceStruct    []user
+	SlicePtrStruct []*user
+	PtrSliceStruct *[]user
+	PtrArrayStruct *[3]user
 }
 
 type address struct {
@@ -98,6 +100,15 @@ func (s *Userservice) TestArrPointer(users [3]*user) int {
 		sum += u.Age
 	}
 	return sum
+}
+
+func (s *Userservice) TestTime(t time.Time) time.Time {
+	return t.Add(time.Hour)
+}
+
+func (s *Userservice) TestTimePtr(t *time.Time) *time.Time {
+	tt := t.Add(time.Hour)
+	return &tt
 }
 
 func TestGetUserById(t *testing.T) {
@@ -502,17 +513,22 @@ func TestArrInsideStruct(t *testing.T) {
 			"football",
 			"basketball",
 		},
-		SonsPtr: []*user{
-			{Name: "a"},
-			{Name: "b"},
-		},
-		SonsStruct: []user{
+		SliceStruct: []user{
 			{Name: "c"},
 			{Name: "d"},
 		},
-		Daughter: &[]user{
+		SlicePtrStruct: []*user{
+			{Name: "a"},
+			{Name: "b"},
+		},
+		PtrSliceStruct: &[]user{
 			{Name: "eee"},
 			{Name: "fff"},
+		},
+		PtrArrayStruct: &[3]user{
+			{Name: "x"},
+			{Name: "y"},
+			{Name: "z"},
 		},
 	}
 
@@ -522,9 +538,57 @@ func TestArrInsideStruct(t *testing.T) {
 	b, _ := json.Marshal(out.Get(0))
 	json.Unmarshal(b, &u)
 
-	t.Log(u.SonsPtr[0].Name)
-	t.Log(u.SonsStruct[0].Name)
-	t.Log((*u.Daughter)[0].Name)
+	t.Log(u.SliceStruct[0].Name)
+	t.Log(u.SlicePtrStruct[0].Name)
+	t.Log((*u.PtrSliceStruct)[0].Name)
+	t.Log((*u.PtrArrayStruct)[0].Name)
+
+	client.Close()
+	l.Close()
+}
+
+func TestTestTime(t *testing.T) {
+	server := NewServer()
+	server.Register(new(Userservice), "UserService")
+	l, _ := net.Listen("tcp", "127.0.0.1:0")
+	go func() {
+		for {
+			conn, err := l.Accept()
+			if err != nil {
+				return
+			}
+			go server.ServeConn(conn)
+		}
+	}()
+
+	client, _ := Dial("tcp", l.Addr().String())
+	out, err := client.Call("UserService", "TestTime", []interface{}{time.Now()})
+	t.Log(err)
+	t.Log(out)
+
+	client.Close()
+	l.Close()
+}
+
+func TestTestTimePtr(t *testing.T) {
+	server := NewServer()
+	server.Register(new(Userservice), "UserService")
+	l, _ := net.Listen("tcp", "127.0.0.1:0")
+	go func() {
+		for {
+			conn, err := l.Accept()
+			if err != nil {
+				return
+			}
+			go server.ServeConn(conn)
+		}
+	}()
+
+	client, _ := Dial("tcp", l.Addr().String())
+	tt := time.Now()
+	out, err := client.Call("UserService", "TestTimePtr", []interface{}{&tt})
+	t.Log(err)
+	t.Log(out)
 
 	client.Close()
 	l.Close()

@@ -7,6 +7,7 @@ import (
 	"net"
 	"reflect"
 	"sync"
+	"time"
 )
 
 type param struct {
@@ -142,7 +143,19 @@ func (s *Server) match(p param, mtype reflect.Type) ([]reflect.Value, bool) {
 	var inValues []reflect.Value
 	for i, arg := range p.InArgs {
 		t := mtype.In(i + 1)
-		if t.Kind() == reflect.Ptr && t.Elem().Kind() == reflect.Struct {
+		if t == reflect.TypeOf(&time.Time{}) {
+			t, err := time.Parse(time.RFC3339, arg.(string))
+			if err != nil {
+				return nil, false
+			}
+			inValues = append(inValues, reflect.ValueOf(&t))
+		} else if t == reflect.TypeOf(time.Time{}) {
+			t, err := time.Parse(time.RFC3339, arg.(string))
+			if err != nil {
+				return nil, false
+			}
+			inValues = append(inValues, reflect.ValueOf(t))
+		} else if t.Kind() == reflect.Ptr && t.Elem().Kind() == reflect.Struct {
 			v := reflect.New(t.Elem())
 			if !s.mapToStruct(arg.(map[string]any), v.Elem()) {
 				return nil, false
@@ -214,6 +227,15 @@ func (s *Server) mapToStruct(arg map[string]any, v reflect.Value) bool {
 			}
 			vv := reflect.New(reflect.SliceOf(structFieldValue.Type().Elem().Elem()))
 			if !s.copySlice(value.([]any), vv.Elem(), structFieldValue.Type().Elem().Elem()) {
+				return false
+			}
+			structFieldValue.Set(vv)
+		} else if structFieldValue.Kind() == reflect.Ptr && structFieldValue.Type().Elem().Kind() == reflect.Array {
+			if value == nil {
+				value = make([]any, 0)
+			}
+			vv := reflect.New(reflect.ArrayOf(structFieldValue.Type().Elem().Len(), structFieldValue.Type().Elem().Elem()))
+			if !s.copyArray(value.([]any), vv.Elem(), structFieldValue.Type().Elem().Elem()) {
 				return false
 			}
 			structFieldValue.Set(vv)

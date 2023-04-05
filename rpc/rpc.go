@@ -218,6 +218,9 @@ func (s *Server) mapToStruct(arg map[string]any, v reflect.Value) bool {
 				return false
 			}
 		} else if structFieldValue.Kind() == reflect.Array {
+			if value == nil {
+				value = make([]any, 0)
+			}
 			if !s.copyArray(value.([]any), structFieldValue, structFieldValue.Type().Elem()) {
 				return false
 			}

@@ -3,7 +3,7 @@ package main
 import (
 	"net"
 
-	"github.com/guobinqiu/rpc/rpc"
+	"github.com/guobinqiu/rpc"
 )
 
 type Userservice struct{}

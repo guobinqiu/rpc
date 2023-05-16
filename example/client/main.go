@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/guobinqiu/rpc/rpc"
+	"github.com/guobinqiu/rpc"
 )
 
 func main() {
